@@ -1,0 +1,908 @@
+using System;
+using System.Threading;
+using System.Reflection;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Numerics;
+
+namespace Celeste.Mods.Randomizer.Generation
+{
+    public partial class RandoLogic
+    {
+        private readonly GenerationContext Context;
+
+        public RandoLogic(GenerationContext context)
+        {
+            this.Context = context;
+            context.Generator = this;
+        }
+
+        public AreaKey GenerateMap(RandoSettings settings)
+        {
+            Context.CheckCancellation();
+            settings.Context = Context;
+            Context.Settings = settings;
+            StringWriter builder = new StringWriter();
+            builder.Write("Generating map with settings:\n");
+            YamlHelper.Serializer.Serialize(builder, settings);
+            GenerationDiagnostics.Log("randomizer", builder.ToString());
+            LazyReload(settings.EnabledMaps);
+            var newID = Context.GenerationAreas.Count;
+            if (Context.GenerationAreas.Last().SID.StartsWith("randomizer/"))
+            {
+                newID--;
+            }
+
+            var generatedMode = Context.CreateMode();
+            generatedMode.Inventory = settings.Dashes == NumDashes.Zero ? new PlayerInventory(0, true, false, false) :
+                settings.Dashes == NumDashes.One ? new PlayerInventory(1, true, false, false) :
+                new PlayerInventory(2, true, false, false);
+            var newArea = new AreaData
+            {
+                IntroType = PlayerIntroType.WakeUp,
+                Interlude = false,
+                Dreaming = false,
+                ID = newID,
+                Name = $"{settings.Seed}_{settings.EndlessLevel}_{settings.Hash}",
+                Mode = new ModeProperties[3]
+                {
+                    generatedMode,
+                    null,
+                    null
+                },
+                Icon = Context.GenerationAreas[0].Icon,
+                MountainIdle = Context.GenerationAreas[0].MountainIdle,
+                MountainZoom = Context.GenerationAreas[0].MountainZoom,
+                MountainState = Context.GenerationAreas[0].MountainState,
+                MountainCursor = new Vector3(0, 100000, 0), // ???
+                MountainSelect = Context.GenerationAreas[0].MountainSelect,
+                MountainCursorScale = Context.GenerationAreas[0].MountainCursorScale,
+            };
+            Context.ConfigureGeneratedArea(newArea);
+            var dyn = Context.State(newArea);
+            dyn.Set<RandoSettings>("RandoSettings", settings.Copy());
+            newArea.SID = $"randomizer/{newArea.Name}";
+            using var stagedArea = Context.StageArea(newArea);
+            var key = Context.Key(newArea, 0);
+            int tryNum = 0;
+            while (true)
+            {
+                Context.CheckCancellation();
+                try
+                {
+                    var r = new RandoLogic(Context, settings, key, tryNum);
+                    newArea.Mode[0].MapData = r.MakeMap();
+                    newArea.Wipe = Context.CreateRandomWipe();
+                    newArea.CompleteScreenName = r.PickCompleteScreen();
+                    newArea.CassetteSong = r.PickCassetteAudio();
+                    if (!Context.AudioEventExists(newArea.CassetteSong))
+                    {
+                        // Invalid cassette song? ugh
+                        newArea.CassetteSong = "event:/music/cassette/01_forsaken_city";
+                    }
+
+                    newArea.Mode[0].AudioState = r.PickAudioState();
+                    if (settings.RandomColors)
+                    {
+                        newArea.BloomBase = (float)Math.Pow(r.Random.NextFloat(), 5) * r.Random.NextFloat();
+                        newArea.DarknessAlpha = r.Random.NextFloat() * (float)Math.Pow(r.Random.NextFloat(), 0.5) *
+                                                (float)Math.Pow(r.Random.NextFloat(), 2) * 0.35f;
+                        newArea.ColorGrade = r.PickColorGrade();
+                    }
+
+                    r.RandomizeDialog();
+                    break;
+                }
+                catch (RetryException)
+                {
+                    tryNum++;
+                    if (tryNum >= 500)
+                    {
+                        throw new GenerationError("Cannot create map with these settings");
+                    }
+
+                    GenerationDiagnostics.Log("randomizer", $"Too many retries ({tryNum}), starting again");
+                }
+            }
+
+            Context.CheckCancellation();
+            Context.PublishArea(newArea);
+            GenerationDiagnostics.Log("randomizer", $"new area {newArea.SID}");
+            return key;
+        }
+
+        private Random Random;
+        private List<StaticRoom> RemainingRooms = new List<StaticRoom>();
+        private AreaKey Key;
+        private LinkedMap Map;
+        private RandoSettings Settings;
+        private Capabilities Caps;
+        private HashSet<String> CassetteSongs = new HashSet<string>();
+        public Dictionary<string, string> RandomDialogMappings => Context.RandomDialogMappings;
+
+        private void ResetRooms()
+        {
+            this.RemainingRooms.Clear();
+            foreach (var room in Context.AllRooms)
+            {
+                if (this.Settings.MapIncluded(room.Area))
+                {
+                    this.RemainingRooms.Add(room);
+                }
+            }
+
+            this.RemainingRooms.Sort((x, y) =>
+            {
+                var z = String.Compare(x.Area.SID, y.Area.SID, comparisonType: StringComparison.Ordinal);
+                if (z != 0)
+                {
+                    return z;
+                }
+
+                z = x.Area.Mode.CompareTo(y.Area.Mode);
+                if (z != 0)
+                {
+                    return z;
+                }
+
+                z = String.Compare(x.Level.Name, y.Level.Name, comparisonType: StringComparison.Ordinal);
+                return z;
+            });
+        }
+
+        private RandoLogic(GenerationContext context, RandoSettings settings, AreaKey key, int tryNum)
+        {
+            this.Context = context;
+            this.Random = new Random((int)settings.IntSeed);
+            for (int i = 0; i < settings.EndlessLevel; i++)
+            {
+                this.Random = new Random(this.Random.Next());
+            }
+
+            for (int i = 0; i < tryNum; i++)
+            {
+                this.Random.Next();
+                this.Random = new Random(this.Random.Next());
+            }
+
+            this.Settings = settings;
+            this.Key = key;
+            this.ResetRooms();
+            this.Caps = new Capabilities
+            {
+                Dashes = settings.Dashes,
+                PlayerSkill = settings.Difficulty,
+                HasKey = true,
+                Flags = new Dictionary<string, FlagState>(),
+            };
+        }
+
+        private AudioState PickAudioState()
+        {
+            var result = new AudioState();
+            result.Ambience.Event = "event:/env/amb/04_main"; // only way to get wind effects?
+            float totalWeight = Context.Metadata.Music.Select(t => t.Weight).Sum();
+            float weighAt = this.Random.NextFloat(totalWeight);
+            float soFar = 0f;
+            foreach (var track in Context.Metadata.Music)
+            {
+                soFar += track.Weight;
+                if (weighAt < soFar)
+                {
+                    result.Music.Event = track.Name;
+                    foreach (var param in track.Parameters)
+                    {
+                        result.Music.Param(param.Key, param.Value);
+                    }
+
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        private string PickCassetteAudio()
+        {
+            foreach (var area in Context.GenerationAreas)
+            {
+                if (area.CassetteSong == null)
+                    continue;
+                CassetteSongs.Add(area.CassetteSong);
+            }
+
+            int songCount = CassetteSongs.Count;
+            return CassetteSongs.ElementAt(this.Random.Next(songCount));
+        }
+
+        private string PickCompleteScreen()
+        {
+            uint seed = this.Settings.IntSeed;
+            tryagain:
+            // ensure different rulesets of the same seed have different end screens
+            var rulesInt = 0;
+            foreach (var ch in this.Settings.Rules)
+            {
+                rulesInt += ch;
+            }
+
+            switch ((seed + rulesInt) % 8)
+            {
+                case 0:
+                    return Context.GenerationAreas[1].CompleteScreenName;
+                case 1:
+                    return Context.GenerationAreas[2].CompleteScreenName;
+                case 2:
+                    return Context.GenerationAreas[3].CompleteScreenName;
+                case 3:
+                    return Context.GenerationAreas[4].CompleteScreenName;
+                case 4:
+                    return Context.GenerationAreas[5].CompleteScreenName;
+                case 5:
+                    return Context.GenerationAreas[6].CompleteScreenName;
+                case 6:
+                    return Context.GenerationAreas[7].CompleteScreenName;
+                case 7:
+                default:
+                    if (this.Settings.Algorithm == LogicType.Endless)
+                    {
+                        seed = (uint)new Random((int)seed).Next();
+                        goto tryagain;
+                    }
+
+                    return Context.GenerationAreas[9].CompleteScreenName;
+            }
+        }
+
+        private string PickColorGrade()
+        {
+            if (this.Random.Next(10) != 0)
+            {
+                return "none";
+            }
+
+            return this.Random.Choose("cold", "credits", "feelingdown", "golden", "hot", "oldsite", "panicattack",
+                "reflection", "templevoid");
+        }
+
+        private MapData MakeMap()
+        {
+            this.Map = new LinkedMap();
+            if (this.Settings.IsLabyrinth)
+            {
+                this.GenerateLabyrinth();
+            }
+            else
+            {
+                this.GeneratePathway();
+            }
+
+            var map = Context.CreateGeneratedMap(this.Key);
+            map.Levels = new List<LevelData>();
+            this.Map.FillMap(map, this.Settings, this.Random);
+            this.SetMapBounds(map);
+            this.SetForeground(map);
+            this.SetBackground(map);
+            this.SetPoem();
+            this.SpawnGolden(map);
+            this.SetDarkness(map);
+            this.PlaceTheoPhone(map);
+            return map;
+        }
+
+        private void SetMapBounds(MapData map)
+        {
+            int num1 = int.MaxValue;
+            int num2 = int.MaxValue;
+            int num3 = int.MinValue;
+            int num4 = int.MinValue;
+            foreach (LevelData level in map.Levels)
+            {
+                if (level.Bounds.Left < num1)
+                    num1 = level.Bounds.Left;
+                if (level.Bounds.Top < num2)
+                    num2 = level.Bounds.Top;
+                if (level.Bounds.Right > num3)
+                    num3 = level.Bounds.Right;
+                if (level.Bounds.Bottom > num4)
+                    num4 = level.Bounds.Bottom;
+            }
+
+            map.Bounds = new Rectangle(num1 - 50, num2 - 50, num3 - num1 + 100, num4 - num2 + 100);
+        }
+
+        private void SetForeground(MapData map)
+        {
+            map.Foreground = new BinaryPackerElement
+            {
+                Children = new List<BinaryPackerElement>()
+            };
+            var effect = this.Random.Choose(Context.Metadata.FgEffects);
+            if (!this.Settings.RandomBackgrounds)
+            {
+                effect = Context.Metadata.FgEffects.First(x => x.Effect == "stardust");
+            }
+
+            effect.Initialize();
+            map.Foreground.Children.AddRange(this.Styleground(effect));
+            var windyOnly = string.Join(",", this.FindWindyLevels(map));
+            if (!effect.ProvidesWind.Value && !string.IsNullOrEmpty(windyOnly))
+            {
+                map.Foreground.Children.Add(new BinaryPackerElement
+                    { Name = "stardust", Attributes = new Dictionary<string, object> { { "only", windyOnly } } });
+            }
+
+            // this cutscene hardcodes a reference to a windsnow fg
+            // the level should only ever be last on the list, right?
+            if (effect.Effect != "windsnow" &&
+                map.Levels.Where(lvl => lvl.Name.StartsWith("Celeste/4-GoldenRidge/A/d-10")).Any())
+            {
+                // There is a miniscule chance of this level being second to last due to fake end
+                var idx = map.Levels.FindIndex(lvl => lvl.Name.StartsWith("Celeste/4-GoldenRidge/A/d-10"));
+                map.Foreground.Children.Add(new BinaryPackerElement
+                {
+                    Name = "windsnow", Attributes = new Dictionary<string, object> { { "only", map.Levels[idx].Name } }
+                });
+            }
+        }
+
+        private Color RandomColor(Func<Color, bool> filter = null)
+        {
+            var possibleColors = new List<Color>(typeof(Color).GetProperties(BindingFlags.Static | BindingFlags.Public)
+                .Where(p => p.PropertyType == typeof(Color)).Select(p => (Color)p.GetValue(null)).Where(c => c.A == 255)
+                .Where(filter ?? (c => true)));
+            return possibleColors[this.Random.Next(possibleColors.Count)];
+        }
+
+        private IEnumerable<BinaryPackerElement> Styleground(RandoMetadataBackground element, float scrollX = 0.3f,
+            float scrollY = 0.3f, int y = 0)
+        {
+            if (element.Or != null)
+            {
+                var n = new RandoMetadataBackground();
+                element.Or.Add(n);
+                var element2 = this.Random.Choose(element.Or);
+                if (element2 != n)
+                {
+                    element2.Initialize(element);
+                    element = element2;
+                }
+            }
+
+            ;
+            var color = this.RandomColor();
+            if (!string.IsNullOrEmpty(element.Texture))
+            {
+                yield return new BinaryPackerElement
+                {
+                    Name = "parallax",
+                    Attributes = new Dictionary<string, object>
+                    {
+                        {
+                            "texture",
+                            element.Texture
+                        },
+                        {
+                            "blendMode",
+                            element.BlendMode
+                        },
+                        {
+                            "loopx",
+                            element.LoopX
+                        },
+                        {
+                            "loopy",
+                            element.LoopY
+                        },
+                        {
+                            "flipx",
+                            element.FlipX
+                        },
+                        {
+                            "flipy",
+                            element.FlipY
+                        },
+                        {
+                            "speedx",
+                            element.SpeedX
+                        },
+                        {
+                            "speedy",
+                            element.SpeedY
+                        },
+                        {
+                            "scrollx",
+                            scrollX * element.ScrollFactorX
+                        },
+                        {
+                            "scrolly",
+                            scrollY * element.ScrollFactorY
+                        },
+                        {
+                            "x",
+                            element.OffX
+                        },
+                        {
+                            "y",
+                            y + element.OffY
+                        },
+                        {
+                            "color",
+                            $"{color.R:X2}{color.G:X2}{color.B:X2}"
+                        },
+                        {
+                            "alpha",
+                            element.Alpha
+                        },
+                    }
+                };
+            }
+            else if (!string.IsNullOrEmpty(element.Effect))
+            {
+                yield return new BinaryPackerElement
+                {
+                    Name = element.Effect,
+                    Attributes = new Dictionary<string, object>
+                    {
+                        {
+                            "scrollx",
+                            scrollX * element.ScrollFactorX
+                        },
+                        {
+                            "scrolly",
+                            scrollY * element.ScrollFactorY
+                        },
+                        {
+                            "color",
+                            $"{color.R:X2}{color.G:X2}{color.B:X2}"
+                        },
+                    },
+                };
+            }
+            else
+            {
+                throw new Exception("Config error: styleground without Texture or Effect");
+            }
+
+            if (element.NeedsColor.Value)
+            {
+                var color2 = this.RandomColor(c => (int)c.R + (int)c.G + (int)c.B > 128 * 3);
+                yield return new BinaryPackerElement
+                {
+                    Name = "parallax",
+                    Attributes = new Dictionary<string, object>
+                    {
+                        {
+                            "texture",
+                            "bgs/06/fx0"
+                        },
+                        {
+                            "blendMode",
+                            "additive"
+                        },
+                        {
+                            "loopx",
+                            true
+                        },
+                        {
+                            "loopy",
+                            true
+                        },
+                        {
+                            "scrolly",
+                            0.3f
+                        },
+                        {
+                            "scrollx",
+                            0.3f
+                        },
+                        {
+                            "color",
+                            $"{color2.R:X2}{color2.G:X2}{color2.B:X2}"
+                        },
+                        {
+                            "alpha",
+                            0.15f
+                        },
+                    }
+                };
+            }
+
+            if (element.AndThen != null)
+            {
+                element.AndThen.Initialize(element);
+                foreach (var e in this.Styleground(element.AndThen, scrollX, scrollY, y))
+                {
+                    yield return e;
+                }
+            }
+        }
+
+        private void SetBackground(MapData map)
+        {
+            map.BackgroundColor = this.RandomColor();
+            int maxY = map.Bounds.Bottom - 180;
+            map.Background = new BinaryPackerElement
+            {
+                Children = new List<BinaryPackerElement>()
+            };
+            const int layers = 5;
+            for (int i = 0; i < layers; i++)
+            {
+                var picked = this.Random.Choose(Context.Metadata.Backgrounds);
+                picked.Initialize();
+                if (picked.CoverTop.Value != 0 && !picked.LoopY.Value)
+                {
+                    i--;
+                    continue;
+                }
+
+                if (picked.Opaque.Value && this.Random.Next(layers) > i)
+                {
+                    // bias not picking opaque backgrounds until we've already added a few
+                    i--;
+                    continue;
+                }
+
+                float scrollX = new[]
+                {
+                    0.3f,
+                    0.25f,
+                    0.2f,
+                    0.1f,
+                    0.05f
+                }[i];
+                float scrollY = new[]
+                {
+                    0.1f,
+                    0.05f,
+                    0.03f,
+                    0.02f,
+                    0.01f
+                }[i];
+                int y = 0;
+                if (picked.Texture != null && !(picked.Opaque.Value && !picked.LoopY.Value))
+                {
+                    int height = Context.TextureHeight(picked.Texture);
+                    y = (int)Math.Ceiling(maxY * scrollY + 180 - height);
+                    if (picked.CoverBottom != 0)
+                    {
+                        maxY = (int)((180 - height + picked.CoverBottom - y) / -scrollY);
+                    }
+                }
+
+                map.Background.Children.InsertRange(0, this.Styleground(picked, scrollX, scrollY, y));
+                if (picked.Opaque.Value)
+                {
+                    break;
+                }
+            }
+
+            var effect = this.Random.Choose(Context.Metadata.BgEffects);
+            effect.Initialize();
+            map.Background.Children.AddRange(this.Styleground(effect));
+            if (!this.Settings.RandomBackgrounds)
+            {
+                map.Background.Children = new List<BinaryPackerElement>
+                {
+                    new BinaryPackerElement
+                    {
+                        Name = "parallax",
+                        Attributes = new Dictionary<string, object>
+                        {
+                            {
+                                "texture",
+                                "bgs/10/sky"
+                            },
+                            {
+                                "loopx",
+                                true
+                            },
+                            {
+                                "loopy",
+                                true
+                            },
+                            {
+                                "scrollx",
+                                0.3f
+                            },
+                            {
+                                "scrolly",
+                                0.3f
+                            },
+                        }
+                    }
+                };
+            }
+
+            // starjump cutscene requires a northernlights bg
+            var lightsOnly = string.Join(",",
+                map.Levels.Where(room => room.Name.StartsWith("Celeste/6-Reflection/A/start")));
+            if (map.Background.Children.All(elem => elem.Name != "northernlights") &&
+                !string.IsNullOrEmpty("lightsOnly"))
+            {
+                map.Background.Children.Insert(0,
+                    new BinaryPackerElement
+                    {
+                        Name = "northernlights", Attributes = new Dictionary<string, object> { { "only", lightsOnly } }
+                    });
+            }
+        }
+
+        private IEnumerable<string> FindWindyLevels(MapData map)
+        {
+            foreach (var lvl in map.Levels)
+            {
+                if (lvl.WindPattern != RoomWindPattern.None)
+                {
+                    yield return lvl.Name;
+                }
+                else
+                {
+                    foreach (var trigger in lvl.Triggers)
+                    {
+                        if (trigger.Name == "windTrigger")
+                        {
+                            yield return lvl.Name;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void SetPoem()
+        {
+            string poem;
+            if (this.Random.Next(100) == 0)
+            {
+                poem = Context.CleanDialog(
+                    $"RANDOHEART_FIXED_{Random.Next(int.Parse(Context.CleanDialog("RANDOHEART_FIXED_COUNT")))}");
+            }
+            else
+            {
+                int nounidx = Random.Next(int.Parse(Context.CleanDialog("RANDOHEART_NOUN_COUNT")));
+                var adjidx = Random.Next(int.Parse(Context.CleanDialog("RANDOHEART_ADJ_COUNT")));
+                string noun = Context.CleanDialog($"RANDOHEART_NOUN_{nounidx}");
+                string adj;
+                if (Context.CleanDialog("RANDOHEART_GENDER") == "true")
+                {
+                    // TODO less restrictive check
+                    string gender = Context.CleanDialog($"RANDOHEART_NOUN_{nounidx}_GENDER");
+                    adj = Context.CleanDialog($"RANDOHEART_ADJ_{adjidx}_{gender}");
+                }
+                else
+                {
+                    adj = Context.CleanDialog($"RANDOHEART_ADJ_{adjidx}");
+                }
+
+                poem = string.Format(Context.GetDialog("RANDOHEART_ADJ_NOUN"), adj, noun);
+            }
+
+            var key = Celeste.Everest.Modules.Updating.EverestStringSource.DialogKeyify(Context.GetArea(this.Key).SID) +
+                      "_A";
+            Context.GetArea(this.Key).Mode[0].PoemID = key;
+            Context.Dialog["POEM_" + key] = poem;
+            Context.CleanedDialog["POEM_" + key] = poem;
+        }
+
+        private void SpawnGolden(MapData map)
+        {
+            if (Settings.SpawnGolden)
+            {
+                var lvl = map.GetAt(Vector2.Zero);
+                var maxid = 0;
+                foreach (var e in lvl.Entities)
+                {
+                    maxid = Math.Max(maxid, e.ID);
+                }
+
+                lvl.Entities.Add(Context.CreateEntity(new GenerationEntitySpec
+                    { Level = lvl, Name = "goldenBerry", Position = lvl.Spawns[0], ID = ++maxid, }));
+            }
+        }
+
+        private void SetDarkness(MapData map)
+        {
+            if (Settings.Darkness == Darkness.Vanilla)
+            {
+                return;
+            }
+
+            var dark = Settings.Darkness == Darkness.Always;
+            foreach (var room in map.Levels)
+            {
+                room.Dark = dark;
+            }
+        }
+
+        private void PlaceTheoPhone(MapData map)
+        {
+            while (true)
+            {
+                //GenerationDiagnostics.Log("DEBUG", "Trying to place phone...");
+                var lvl = this.Random.Choose(map.Levels);
+                var regex = new Regex("\\r\\n|\\n\\r|\\n|\\r");
+                var lines = new List<string>(regex.Split(lvl.Solids));
+                char at(int xx, int yy) => yy >= lines.Count ? '0' : xx >= lines[yy].Length ? '0' : lines[yy][xx];
+                var height = lines.Count;
+                var width = lines.Select(j => j.Length).Max();
+                var found = false;
+                int x = 0, y = 0;
+                for (int i = 0; i < 20 && !found; i++)
+                {
+                    x = this.Random.Next(width);
+                    y = this.Random.Next(height);
+                    var ch = at(x, y);
+                    var dir = at(x, y) == '0' ? 1 : -1;
+                    for (y += dir; y >= 0 && y < height; y += dir)
+                    {
+                        var ch2 = at(x, y);
+                        var edge = (ch == '0') != (ch2 == '0');
+                        if (edge)
+                        {
+                            if (dir == -1)
+                            {
+                                y++;
+                            }
+
+                            var BehindEnt = lvl.Entities.Where(e =>
+                            {
+                                // entities that don't have these fields default to 0,
+                                // but to be certain the player can see the phone, check one tile over
+                                var entWidth = e.Width + 8;
+                                var entHeight = e.Height + 8;
+                                return e.Position.X / 8 + entWidth / 8 >= x && e.Position.X / 8 - 1 <= x &&
+                                       e.Position.Y / 8 + entHeight / 8 >= y && e.Position.Y / 8 - 1 <= y;
+                            }).Any();
+                            var InsideRoof = lvl.FgDecals.Where(fg =>
+                            {
+                                if (fg.Scale.X < 0)
+                                {
+                                    return (fg.Position.X) / 8 >= x && (fg.Position.X + 8 * fg.Scale.X) / 8 <= x &&
+                                           (fg.Position.Y + 4) / 8 == y;
+                                }
+
+                                return (fg.Position.X) / 8 <= x && (fg.Position.X + 8 * fg.Scale.X) / 8 >= x &&
+                                       (fg.Position.Y + 4) / 8 == y;
+                            }).Any();
+                            if (at(x + 1, y - 1) == '0' && at(x + 1, y) != '0' && !BehindEnt && !InsideRoof)
+                            {
+                                found = true;
+                            }
+
+                            break;
+                        }
+                    }
+                }
+
+                if (!found)
+                {
+                    continue;
+                }
+
+                var maxid = 0;
+                foreach (var e in lvl.Entities)
+                {
+                    maxid = Math.Max(maxid, e.ID);
+                }
+
+                GenerationDiagnostics.Log("Randomizer", $"Adding phone at {lvl.Name} {x}x{y}");
+                lvl.Entities.Add(Context.CreateEntity(new GenerationEntitySpec
+                {
+                    Level = lvl, Name = "randomizer/TheoPhone", Position = new Vector2(x * 8f + 4f, y * 8f),
+                    ID = ++maxid,
+                }));
+                break;
+            }
+        }
+
+        private void RandomizeDialog()
+        {
+            RandomDialogMappings.Clear();
+            // Shuffle spoken and nonspoken dialog separately for better results
+            List<string> spokenDialogIDs = GetSortedDialogIDs(spoken: true);
+            List<string> nonspokenDialogIDs = GetSortedDialogIDs(spoken: false);
+            List<string> shuffledSpokenDialogIDs = ShuffleDialogIDsByLength(spokenDialogIDs);
+            List<string> shuffledNonspokenDialogIDs = ShuffleDialogIDsByLength(nonspokenDialogIDs);
+            for (int i = 0; i < spokenDialogIDs.Count; i++)
+            {
+                RandomDialogMappings[spokenDialogIDs[i].ToLower()] = shuffledSpokenDialogIDs[i].ToLower();
+            }
+
+            for (int i = 0; i < nonspokenDialogIDs.Count; i++)
+            {
+                RandomDialogMappings[nonspokenDialogIDs[i].ToLower()] = shuffledNonspokenDialogIDs[i].ToLower();
+            }
+        }
+
+        private List<string> GetSortedDialogIDs(bool spoken)
+        {
+            List<string> dialogIDs = new List<string>(Context.Dialog.Keys);
+            // Don't touch poem names or mad lib templates
+            dialogIDs.RemoveAll((id) => id.StartsWith("POEM_", StringComparison.InvariantCultureIgnoreCase));
+            dialogIDs.RemoveAll((id) => id.StartsWith("RANDO_", StringComparison.InvariantCultureIgnoreCase));
+            dialogIDs.RemoveAll((id) => id.StartsWith("RANDOHEART_", StringComparison.InvariantCultureIgnoreCase));
+            // Don't touch anything which is madlib-randomized
+            dialogIDs.RemoveAll((id) => Context.HasDialog("RANDO_" + id));
+            // Quick, naive way to distinguish spoken dialog
+            if (spoken)
+            {
+                dialogIDs.RemoveAll((id) => !Context.GetDialog(id).Contains("portrait"));
+            }
+            else
+            {
+                dialogIDs.RemoveAll((id) => Context.GetDialog(id).Contains("portrait"));
+            }
+
+            dialogIDs.Sort((s1, s2) => Context.GetDialog(s1).Length.CompareTo(Context.GetDialog(s2).Length));
+            return dialogIDs;
+        }
+
+        // The idea here is to have our results be random, but reasonably close to the same length
+        // ~10% of the list gets shuffled with itself at a time (irregular segment at the end)
+        static List<string> ShuffleDialogIDsByLength(List<string> sortedIDs)
+        {
+            Random rng = new Random();
+            List<string> shuffledIDs = new List<string>(sortedIDs);
+            int segments = 10;
+            int segSize = shuffledIDs.Count / segments;
+            for (int i = shuffledIDs.Count - 1; i > 0; i--)
+            {
+                int start = (i / segSize) * segSize;
+                int swapIndex = rng.Next(start, i + 1);
+                string tmp = shuffledIDs[i];
+                shuffledIDs[i] = shuffledIDs[swapIndex];
+                shuffledIDs[swapIndex] = tmp;
+            }
+
+            return shuffledIDs;
+        }
+
+        private List<StaticEdge> AvailableNewEdges(Capabilities capsIn, Capabilities capsOut,
+            Func<StaticEdge, bool> filter = null)
+        {
+            var result = new List<StaticEdge>();
+            foreach (var room in this.RemainingRooms)
+            {
+                foreach (var node in room.Nodes.Values)
+                {
+                    foreach (var edge in node.Edges)
+                    {
+                        if (edge.HoleTarget == null)
+                        {
+                            continue;
+                        }
+
+                        if (edge.HoleTarget.Kind == HoleKind.Unknown && !this.Settings.EnterUnknown)
+                        {
+                            continue;
+                        }
+
+                        if (capsIn != null && !edge.ReqIn.Able(capsIn))
+                        {
+                            continue;
+                        }
+
+                        if (capsOut != null && !edge.ReqOut.Able(capsOut))
+                        {
+                            continue;
+                        }
+
+                        if (filter != null && !filter(edge))
+                        {
+                            continue;
+                        }
+
+                        result.Add(edge);
+                    }
+                }
+            }
+
+            result.Shuffle(this.Random);
+            return result;
+        }
+    }
+}
