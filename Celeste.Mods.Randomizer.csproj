@@ -1,0 +1,85 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+        <AssemblyName>Celeste.Mods.Randomizer</AssemblyName>
+        <RootNamespace>Celeste.Mods.Randomizer</RootNamespace>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Audio/Celeste.Audio.csproj" Private="false" />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Audio.Fmod/Celeste.Audio.Fmod.csproj" Private="false" />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Audio.Fmod.Gameplay/Celeste.Audio.Fmod.Gameplay.csproj"
+            Private="false"
+        />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Compression.Archives/Celeste.Compression.Archives.csproj"
+            Private="false"
+        />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Core/Celeste.Core.csproj" Private="false" />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Everest.Detours/Celeste.Everest.Detours.csproj"
+            Private="false"
+        />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Everest/Celeste.Everest.csproj" Private="false" />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Formats.Graphics/Celeste.Formats.Graphics.csproj"
+            Private="false"
+        />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Formats.Map/Celeste.Formats.Map.csproj" Private="false" />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Formats.Replay/Celeste.Formats.Replay.csproj"
+            Private="false"
+        />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Formats.Save/Celeste.Formats.Save.csproj"
+            Private="false"
+        />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Formats.Settings/Celeste.Formats.Settings.csproj"
+            Private="false"
+        />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Framework/Celeste.Framework.csproj" Private="false" />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Game/Celeste.Game.csproj" Private="false" />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Game.Runtime/Celeste.Game.Runtime.csproj"
+            Private="false"
+        />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Graphics/Celeste.Graphics.csproj" Private="false" />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Hosting/Celeste.Hosting.csproj" Private="false" />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Hosting.Runtime/Celeste.Hosting.Runtime.csproj"
+            Private="false"
+        />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Input/Celeste.Input.csproj" Private="false" />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Input.Gameplay/Celeste.Input.Gameplay.csproj"
+            Private="false"
+        />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Localization/Celeste.Localization.csproj"
+            Private="false"
+        />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Physics/Celeste.Physics.csproj" Private="false" />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Platform.Native/Celeste.Platform.Native.csproj"
+            Private="false"
+        />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Recorder/Celeste.Recorder.csproj" Private="false" />
+        <ProjectReference
+            Include="$(SharedRoot)/src/Celeste.Recorder.Native/Celeste.Recorder.Native.csproj"
+            Private="false"
+        />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Savestates/Celeste.Savestates.csproj" Private="false" />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Scene/Celeste.Scene.csproj" Private="false" />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.Simulation/Celeste.Simulation.csproj" Private="false" />
+        <ProjectReference Include="$(SharedRoot)/src/Celeste.StateCloner/Celeste.StateCloner.csproj" Private="false" />
+        <ProjectReference Include="../TAS/SettingsFormat/Celeste.Tas.SettingsFormat.csproj" Private="false" />
+        <ProjectReference Include="../TAS/StudioCommunication/Celeste.Tas.StudioCommunication.csproj" Private="false" />
+        <Reference Include="YamlDotNet" HintPath="$(SharedRoot)/lib/Everest/YamlDotNet.dll" Private="false" />
+        <ProjectReference Include="Generation/Celeste.Mods.Randomizer.Generation.csproj" />
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.3.6" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="Generation/**/*.cs" />
+    </ItemGroup>
+</Project>

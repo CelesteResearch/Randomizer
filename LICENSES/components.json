@@ -1,0 +1,593 @@
+{
+  "module": "Randomizer",
+  "upstreamLicense": "MIT",
+  "projects": [
+    "Celeste.Mods.Randomizer.csproj",
+    "Generation/Celeste.Mods.Randomizer.Generation.csproj"
+  ],
+  "projectDependencies": [
+    "Celeste.Audio",
+    "Celeste.Audio.Fmod",
+    "Celeste.Audio.Fmod.Gameplay",
+    "Celeste.Compression.Archives",
+    "Celeste.Core",
+    "Celeste.Everest",
+    "Celeste.Everest.Detours",
+    "Celeste.Formats.Graphics",
+    "Celeste.Formats.Map",
+    "Celeste.Formats.Replay",
+    "Celeste.Formats.Save",
+    "Celeste.Formats.Settings",
+    "Celeste.Framework",
+    "Celeste.Game",
+    "Celeste.Game.Runtime",
+    "Celeste.Graphics",
+    "Celeste.Hosting",
+    "Celeste.Hosting.Runtime",
+    "Celeste.Input",
+    "Celeste.Input.Gameplay",
+    "Celeste.Localization",
+    "Celeste.Mods.Randomizer.Generation",
+    "Celeste.Physics",
+    "Celeste.Platform.Native",
+    "Celeste.Recorder",
+    "Celeste.Recorder.Native",
+    "Celeste.Savestates",
+    "Celeste.Scene",
+    "Celeste.Simulation",
+    "Celeste.StateCloner",
+    "Celeste.Tas.SettingsFormat",
+    "Celeste.Tas.StudioCommunication"
+  ],
+  "packageDependencies": [
+    "MonoMod.RuntimeDetour 25.3.6"
+  ],
+  "originalEvidence": {},
+  "licenseScope": "NOTICE.md",
+  "projectReferencePaths": [
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Audio/Celeste.Audio.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Audio.Fmod/Celeste.Audio.Fmod.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Audio.Fmod.Gameplay/Celeste.Audio.Fmod.Gameplay.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Compression.Archives/Celeste.Compression.Archives.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Core/Celeste.Core.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Everest.Detours/Celeste.Everest.Detours.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Everest/Celeste.Everest.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Formats.Graphics/Celeste.Formats.Graphics.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Formats.Map/Celeste.Formats.Map.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Formats.Replay/Celeste.Formats.Replay.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Formats.Save/Celeste.Formats.Save.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Formats.Settings/Celeste.Formats.Settings.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Framework/Celeste.Framework.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Game/Celeste.Game.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Game.Runtime/Celeste.Game.Runtime.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Graphics/Celeste.Graphics.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Hosting/Celeste.Hosting.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Hosting.Runtime/Celeste.Hosting.Runtime.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Input/Celeste.Input.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Input.Gameplay/Celeste.Input.Gameplay.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Localization/Celeste.Localization.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Physics/Celeste.Physics.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Platform.Native/Celeste.Platform.Native.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Recorder/Celeste.Recorder.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Recorder.Native/Celeste.Recorder.Native.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Savestates/Celeste.Savestates.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Scene/Celeste.Scene.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Simulation/Celeste.Simulation.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "$(SharedRoot)/src/Celeste.StateCloner/Celeste.StateCloner.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "../TAS/SettingsFormat/Celeste.Tas.SettingsFormat.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "../TAS/StudioCommunication/Celeste.Tas.StudioCommunication.csproj"
+    },
+    {
+      "project": "Celeste.Mods.Randomizer.csproj",
+      "include": "Generation/Celeste.Mods.Randomizer.Generation.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Audio/Celeste.Audio.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Audio.Fmod/Celeste.Audio.Fmod.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Audio.Fmod.Gameplay/Celeste.Audio.Fmod.Gameplay.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Compression.Archives/Celeste.Compression.Archives.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Core/Celeste.Core.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Everest.Detours/Celeste.Everest.Detours.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Everest/Celeste.Everest.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Formats.Graphics/Celeste.Formats.Graphics.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Formats.Map/Celeste.Formats.Map.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Formats.Replay/Celeste.Formats.Replay.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Formats.Save/Celeste.Formats.Save.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Formats.Settings/Celeste.Formats.Settings.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Framework/Celeste.Framework.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Game/Celeste.Game.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Game.Runtime/Celeste.Game.Runtime.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Graphics/Celeste.Graphics.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Hosting/Celeste.Hosting.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Hosting.Runtime/Celeste.Hosting.Runtime.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Input/Celeste.Input.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Input.Gameplay/Celeste.Input.Gameplay.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Localization/Celeste.Localization.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Physics/Celeste.Physics.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Platform.Native/Celeste.Platform.Native.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Recorder/Celeste.Recorder.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Recorder.Native/Celeste.Recorder.Native.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Savestates/Celeste.Savestates.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Scene/Celeste.Scene.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.Simulation/Celeste.Simulation.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "$(SharedRoot)/src/Celeste.StateCloner/Celeste.StateCloner.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "../../TAS/SettingsFormat/Celeste.Tas.SettingsFormat.csproj"
+    },
+    {
+      "project": "Generation/Celeste.Mods.Randomizer.Generation.csproj",
+      "include": "../../TAS/StudioCommunication/Celeste.Tas.StudioCommunication.csproj"
+    }
+  ],
+  "repositoryDependencies": [
+    "Shared",
+    "TAS"
+  ],
+  "components": [
+    {
+      "id": "JetBrains.Annotations/2023.3.0",
+      "category": "nuget-package",
+      "license": "MIT",
+      "projectUrl": "https://www.jetbrains.com/help/resharper/Code_Analysis__Code_Annotations.html",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/JetBrains/JetBrains.Annotations.git"
+      },
+      "licenseTexts": [
+        "LICENSES/JetBrains.Annotations.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "MemoryPack.Core/1.21.1",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Cysharp, Inc.",
+      "projectUrl": "https://github.com/Cysharp/MemoryPack",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/Cysharp/MemoryPack",
+        "commit": "4b1e3f889fbc8bae6e700bc148f6dbba0a4b7170"
+      },
+      "licenseTexts": [
+        "LICENSES/MemoryPack.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "MemoryPack.Generator/1.21.1",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Cysharp, Inc.",
+      "projectUrl": "https://github.com/Cysharp/MemoryPack",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/Cysharp/MemoryPack",
+        "commit": "4b1e3f889fbc8bae6e700bc148f6dbba0a4b7170"
+      },
+      "licenseTexts": [
+        "LICENSES/MemoryPack.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "MemoryPack/1.21.1",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Cysharp, Inc.",
+      "projectUrl": "https://github.com/Cysharp/MemoryPack",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/Cysharp/MemoryPack",
+        "commit": "4b1e3f889fbc8bae6e700bc148f6dbba0a4b7170"
+      },
+      "licenseTexts": [
+        "LICENSES/MemoryPack.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "Microsoft.Bcl.AsyncInterfaces/8.0.0",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/runtime",
+        "commit": "5535e31a712343a63f5d7d796cd874e563e5ac14"
+      },
+      "licenseTexts": [
+        "LICENSES/Microsoft.Bcl.AsyncInterfaces.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "Mono.Cecil/0.11.6",
+      "category": "nuget-package",
+      "license": "MIT",
+      "projectUrl": "http://github.com/jbevain/cecil/",
+      "licenseTexts": [
+        "LICENSES/Mono.Cecil.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "MonoMod.Backports/1.1.2",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "Copyright 2024 0x0ade, DaNike",
+      "projectUrl": "https://github.com/MonoMod",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/MonoMod/MonoMod.git",
+        "commit": "a1b82852b2574742776af08818487b90b0bfab93"
+      },
+      "licenseTexts": [
+        "LICENSES/MonoMod-vendor.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "MonoMod.Core/1.3.6",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "Copyright 2026 0x0ade, DaNike",
+      "projectUrl": "https://github.com/MonoMod",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/MonoMod/MonoMod",
+        "branch": "refs/heads/reorganize",
+        "commit": "a74a1cf0d15c5e82dfa6ef8bbe7a131b60bed3fd"
+      },
+      "licenseTexts": [
+        "LICENSES/MonoMod.Core.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "MonoMod.ILHelpers/1.1.0",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "Copyright 2024 0x0ade, DaNike",
+      "projectUrl": "https://github.com/MonoMod",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/MonoMod/MonoMod.git",
+        "commit": "a1b82852b2574742776af08818487b90b0bfab93"
+      },
+      "licenseTexts": [
+        "LICENSES/MonoMod-vendor.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "MonoMod.RuntimeDetour/25.3.6",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "Copyright 2026 0x0ade, DaNike",
+      "projectUrl": "https://github.com/MonoMod",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/MonoMod/MonoMod",
+        "branch": "refs/heads/reorganize",
+        "commit": "a74a1cf0d15c5e82dfa6ef8bbe7a131b60bed3fd"
+      },
+      "licenseTexts": [
+        "LICENSES/MonoMod-vendor.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "System.Buffers/4.5.1",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "licenseTexts": [
+        "LICENSES/Microsoft.Bcl.AsyncInterfaces.LICENSE.txt"
+      ],
+      "licenseUrl": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT"
+    },
+    {
+      "id": "System.Collections.Immutable/8.0.0",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/runtime",
+        "commit": "5535e31a712343a63f5d7d796cd874e563e5ac14"
+      },
+      "licenseTexts": [
+        "LICENSES/Microsoft.Bcl.AsyncInterfaces.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "System.Memory/4.5.5",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "licenseTexts": [
+        "LICENSES/Microsoft.Bcl.AsyncInterfaces.LICENSE.txt"
+      ],
+      "licenseUrl": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT"
+    },
+    {
+      "id": "System.Numerics.Vectors/4.4.0",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Microsoft Corporation.  All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "licenseTexts": [
+        "LICENSES/Microsoft.Bcl.AsyncInterfaces.LICENSE.txt"
+      ],
+      "licenseUrl": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT"
+    },
+    {
+      "id": "System.Reflection.Emit.ILGeneration/4.7.0",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/dotnet/corefx",
+      "licenseTexts": [
+        "LICENSES/Microsoft.Bcl.AsyncInterfaces.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "System.Reflection.Emit.Lightweight/4.7.0",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/dotnet/corefx",
+      "licenseTexts": [
+        "LICENSES/Microsoft.Bcl.AsyncInterfaces.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "System.Runtime.CompilerServices.Unsafe/6.1.2",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/dotnet/maintenance-packages",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/maintenance-packages",
+        "commit": "f62ca0009b038cab4725a720f386623a969d73ad"
+      },
+      "licenseTexts": [
+        "LICENSES/Microsoft.Bcl.AsyncInterfaces.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "System.Text.Encodings.Web/8.0.0",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/runtime",
+        "commit": "5535e31a712343a63f5d7d796cd874e563e5ac14"
+      },
+      "licenseTexts": [
+        "LICENSES/Microsoft.Bcl.AsyncInterfaces.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "System.Text.Json/8.0.5",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "sourceRepository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/runtime",
+        "commit": "81cabf2857a01351e5ab578947c7403a5b128ad1"
+      },
+      "licenseTexts": [
+        "LICENSES/Microsoft.Bcl.AsyncInterfaces.LICENSE.txt"
+      ],
+      "licenseUrl": "https://licenses.nuget.org/MIT"
+    },
+    {
+      "id": "System.Threading.Tasks.Extensions/4.5.4",
+      "category": "nuget-package",
+      "license": "MIT",
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "licenseTexts": [
+        "LICENSES/Microsoft.Bcl.AsyncInterfaces.LICENSE.txt"
+      ],
+      "licenseUrl": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT"
+    }
+  ],
+  "license": "MIT",
+  "contributionLicense": "MIT"
+}
